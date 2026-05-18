@@ -7,6 +7,14 @@
 export function evaluate(tokens) {
   const src = tokensToString(tokens);
   if (!src.trim()) return null;
+
+  // 相鄰兩個 operator token → 錯誤（不允許 `+ -` 這樣的組合）
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (tokens[i].type === 'operator' && tokens[i + 1].type === 'operator') {
+      return null;
+    }
+  }
+
   try {
     const result = parseExpr(src.trim(), { pos: 0 });
     return isFinite(result) ? result : null;

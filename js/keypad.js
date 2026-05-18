@@ -75,32 +75,56 @@ function handleKey(key) {
 
 // Insert a key at the current cursor position; return next cursor index.
 function appendKey(exprId, curIdx, key) {
-  const expr   = getById(exprId);
-  const tokens = expr.tokens;
+  const expr    = getById(exprId);
+  const tokens  = expr.tokens;
+  const { charIndex: ci } = getCursor();
 
+  const cur     = tokens[curIdx];
+  const prevTok = curIdx > 0 ? tokens[curIdx - 1] : null;
+  // 游標是否位於兩個相鄰 operator 之間（cursor ON 第二個 op）
+  const betweenOps = cur?.type === 'operator' && prevTok?.type === 'operator';
+
+  // ── Operator ──────────────────────────────────────────────────────────────
   if (isOperator(key)) {
-    const cur = tokens[curIdx];
-    // 游標正好在某個 operator → 直接替換
-    if (cur && cur.type === 'operator' && !cur.linked) {
-      setToken(exprId, curIdx, key);
-      return curIdx + 1; // cursor moves past operator
+    if (betweenOps) {
+      // 替換「前一個」operator（op1），並移除「當前」operator（op2）
+      setToken(exprId, curIdx - 1, key);
+      removeToken(exprId, curIdx);       // op2 在 curIdx，移除後長度 -1
+      return curIdx;                     // 游標在新 op 之後，準備輸入數字
     }
-    // 其他情況：插在游標「之後」（curIdx + 1）
+    if (cur?.type === 'operator' && !cur.linked) {
+      // 游標在單個 op 上 → 替換
+      setToken(exprId, curIdx, key);
+      return curIdx + 1;
+    }
+    // 一般情況：插在游標之後
     const at = curIdx < tokens.length ? curIdx + 1 : tokens.length;
     insertToken(exprId, at, { type: 'operator', value: key });
-    return at + 1; // cursor ready for next number
+    // 若前一個也是 op → 游標停在新 op 上（兩 op 之間），等待輸入數字
+    if (prevTok?.type === 'operator') return at;
+    return at + 1;
   }
 
+  // ── 括號 ──────────────────────────────────────────────────────────────────
   if (key === '(' || key === ')') {
+    if (key === '(' && betweenOps) {
+      // 在兩個 op 之間插入 (，游標跟在 ( 後（op2 繼續存在，成為括號內的 unary）
+      insertToken(exprId, curIdx, { type: 'number', value: '(' });
+      return curIdx + 1;
+    }
     const at = curIdx < tokens.length ? curIdx + 1 : tokens.length;
     insertToken(exprId, at, { type: 'number', value: key });
     return at + 1;
   }
 
-  // Digit, dot, or '00'
-  const cur = tokens[curIdx];
-  const { charIndex: ci } = getCursor();
-  if (cur && cur.type === 'number' && !cur.linked && cur.value !== '(' && cur.value !== ')') {
+  // ── 數字 / 小數點 / 00 ────────────────────────────────────────────────────
+  if (betweenOps) {
+    // 在兩 op 之間插入數字（插在 op2 前面）
+    insertToken(exprId, curIdx, { type: 'number', value: key === '00' ? '0' : key });
+    return curIdx; // 游標在新數字上
+  }
+
+  if (cur?.type === 'number' && !cur.linked && cur.value !== '(' && cur.value !== ')') {
     if ((key === '.' && cur.value.includes('.')) ||
         (key === '00' && cur.value === '0')) return curIdx;
 
@@ -109,19 +133,15 @@ function appendKey(exprId, curIdx, key) {
       const ins = key === '00' ? '00' : key;
       const newVal = cur.value.slice(0, ci + 1) + ins + cur.value.slice(ci + 1);
       setToken(exprId, curIdx, newVal);
-      // 游標移到插入字元末尾
       setCursor(exprId, curIdx, ci + ins.length);
       return curIdx;
     }
-
     setToken(exprId, curIdx, cur.value + key);
-    return curIdx; // stay on same token (charIndex remains null = end)
+    return curIdx;
   }
 
-  // 沒有數字 token 在游標上 → 新建一個
-  // 若游標在 operator 上，插在它「之後」；否則插在末尾
-  const cur2 = tokens[curIdx];
-  const insertAt = (cur2 && cur2.type === 'operator')
+  // 沒有數字 token 在游標上 → 新建
+  const insertAt = cur?.type === 'operator'
     ? curIdx + 1
     : Math.min(curIdx, tokens.length);
   insertToken(exprId, insertAt, { type: 'number', value: key === '00' ? '0' : key });
