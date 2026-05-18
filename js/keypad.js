@@ -178,7 +178,11 @@ function handleBackspace(expr, idx) {
 }
 
 function handleEquals(expr) {
-  setCursor(expr.id, expr.tokens.length);
+  if (expr.result !== null) {
+    setPendingOp(expr.id); // result 綠底白字，等待下一個運算子
+  } else {
+    setCursor(expr.id, expr.tokens.length);
+  }
 }
 
 function handlePercent(expr, idx) {

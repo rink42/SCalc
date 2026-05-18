@@ -114,8 +114,10 @@ html, body {
 .cur-token.result:hover { background: rgba(200,230,201,0.12); }
 .cur-token.result.error { color: var(--error); cursor: default; }
 .cur-token.result.pending {
-  color: var(--accent);
-  animation: pulse-text 0.9s ease infinite alternate;
+  background: #2e7d32;
+  color: #fff;
+  border-radius: 6px;
+  padding: 0 8px;
 }
 .cur-token.linked  { color: var(--linked); font-style: italic; cursor: default; }
 /* = result 整組不拆行：若放不下就整組到下一行 */
