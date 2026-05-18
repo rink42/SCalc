@@ -141,9 +141,13 @@ function appendKey(exprId, curIdx, key) {
   }
 
   // 沒有數字 token 在游標上 → 新建
-  const insertAt = cur?.type === 'operator'
-    ? curIdx + 1
-    : Math.min(curIdx, tokens.length);
+  // 若游標在 op 上，而前一個是 `(` 或另一個 op（已被 betweenOps 處理），
+  // 則插在 op 「前」；若前一個是數字，則插在 op 「後」（夾在 op 和下一 token 間）
+  const insertAt = (cur?.type === 'operator' && prevTok?.value === '(')
+    ? curIdx           // 插在 op 前（緊接在 ( 後）
+    : cur?.type === 'operator'
+      ? curIdx + 1     // 插在 op 後（原行為）
+      : Math.min(curIdx, tokens.length);
   insertToken(exprId, insertAt, { type: 'number', value: key === '00' ? '0' : key });
   return insertAt;
 }
