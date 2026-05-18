@@ -1,12 +1,10 @@
-import { getById, createExpression, setToken, insertToken, removeToken } from './expression.js';
+import { getById, getAll, createExpression, setToken, insertToken, removeToken, removeExpression } from './expression.js';
 import { formatResult } from './evaluator.js';
 import {
-  getCursor, getPendingOpId, getSelectedHistId,
-  setCursor, clearPendingOp, clearSelectedHist,
-  setPendingOp, scrollToBottom, refresh,
-  onCursorUpdate, onPendingOpSelect,
+  getCursor, getPendingOpId,
+  setCursor, clearPendingOp,
+  setPendingOp, scrollToBottom,
 } from './ui.js';
-import { removeExpression } from './expression.js';
 
 export function initKeypad() {
   document.getElementById('keypad').addEventListener('click', e => {
@@ -19,16 +17,13 @@ export function initKeypad() {
 function handleKey(key) {
   // ── Broom (clear) ────────────────────────────────────────────────────────
   if (key === 'clear') {
-    const histId = getSelectedHistId();
-    if (histId) {
-      removeExpression(histId);
-      clearSelectedHist();
-    } else {
-      const { exprId } = getCursor();
-      if (exprId) {
-        removeExpression(exprId);
-        setCursor(null, null);
-      }
+    const { exprId } = getCursor();
+    if (exprId) {
+      removeExpression(exprId);
+      // active 移到最後一個剩餘運算式
+      const rest = getAll();
+      const last = rest[rest.length - 1];
+      setCursor(last ? last.id : null, last ? last.tokens.length : null);
     }
     return;
   }

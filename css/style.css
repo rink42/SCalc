@@ -34,7 +34,7 @@ html, body {
   margin: 0 auto;
 }
 
-/* ── History（小字） ── */
+/* ── 所有運算式（統一大小，可捲動） ── */
 #history-area {
   flex: 1;
   overflow-y: auto;
@@ -46,57 +46,24 @@ html, body {
 #history-area::-webkit-scrollbar { width: 2px; }
 #history-area::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 1px; }
 
-#history-container {
+#expressions-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-height: 100%;
   justify-content: flex-end;
 }
 
-.hist-row {
-  font-size: 16px;
-  color: var(--text-dim);
-  line-height: 1.6;
-  padding: 2px 0;
-  word-break: break-all;
-  text-align: right;       /* 右對齊，與大字區一致 */
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.hist-row:hover { color: var(--text); }
-
-.hist-row .hist-result {
-  color: #8ab4f8;
-}
-
-.hist-row.selected-hist {
-  color: var(--text);
-  background: rgba(255,255,255,0.05);
-  border-radius: 6px;
-  padding: 2px 6px;
-}
-
-/* ── Current expression（大字，右對齊） ── */
-#current-area {
-  padding: 8px 16px 6px;
-  min-height: 80px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  background: var(--bg);
-}
-
-#current-expr {
-  font-size: 36px;
+/* 每一列運算式 */
+.expr-row {
+  font-size: 32px;
   font-weight: 400;
   line-height: 1.35;
   text-align: right;
   word-break: break-all;
   color: var(--text);
+  padding: 2px 0;
   width: 100%;
-  /* 讓所有 token 與 = result 都 inline，整體右對齊 */
 }
 
 /* Individual tokens in current expression */
