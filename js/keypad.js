@@ -109,7 +109,7 @@ function appendKey(exprId, curIdx, key) {
   if (key === '(' || key === ')') {
     if (key === '(' && betweenOps) {
       insertToken(exprId, curIdx, { type: 'number', value: '(' });
-      return curIdx + 1;
+      return curIdx;  // 游標停在 ( 上，而非 op2 上，避免下一個 ( 插在 op2 後面
     }
     const at = curIdx < tokens.length ? curIdx + 1 : tokens.length;
     insertToken(exprId, at, { type: 'number', value: key });

@@ -1,4 +1,4 @@
-const CACHE_VER = 'scalc-v9';
+const CACHE_VER = 'scalc-v10';
 
 // 動態取得 base path（支援 GitHub Pages 子目錄部署）
 const BASE = self.registration.scope;
