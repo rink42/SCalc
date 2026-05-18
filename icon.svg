@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="100" fill="#16213e"/>
+  <!-- S -->
+  <text
+    x="256" y="340"
+    font-family="'SF Pro Display', 'Segoe UI', system-ui, sans-serif"
+    font-size="320"
+    font-weight="700"
+    fill="#eaeaea"
+    text-anchor="middle"
+  >S</text>
+  <!-- 底部小字 -->
+  <text
+    x="256" y="420"
+    font-family="'SF Pro Display', 'Segoe UI', system-ui, sans-serif"
+    font-size="72"
+    font-weight="400"
+    fill="#e94560"
+    text-anchor="middle"
+    letter-spacing="8"
+  >CALC</text>
+</svg>

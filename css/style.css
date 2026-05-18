@@ -1,0 +1,195 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #16213e;
+  --surface:   #1a2744;
+  --surface2:  #0f3460;
+  --accent:    #e94560;
+  --text:      #eaeaea;
+  --text-dim:  #8899bb;
+  --linked:    #7ec8e3;
+  --error:     #ff4d6d;
+  --result:    #c8e6c9;
+  --key-num:   #1e2d4f;
+  --key-op:    #243558;
+  --key-func:  #1a2744;
+  --key-eq:    #2e7d32;
+  --radius:    10px;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── History（小字） ── */
+#history-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 16px 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+#history-area::-webkit-scrollbar { width: 2px; }
+#history-area::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 1px; }
+
+#history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 100%;
+  justify-content: flex-end;
+}
+
+.hist-row {
+  font-size: 16px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  padding: 2px 0;
+  word-break: break-all;
+  text-align: right;       /* 右對齊，與大字區一致 */
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hist-row:hover { color: var(--text); }
+
+.hist-row .hist-result {
+  color: #8ab4f8;
+}
+
+.hist-row.selected-hist {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+/* ── Current expression（大字，右對齊） ── */
+#current-area {
+  padding: 8px 16px 6px;
+  min-height: 80px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  background: var(--bg);
+}
+
+#current-expr {
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: right;
+  word-break: break-all;
+  color: var(--text);
+  width: 100%;
+  /* 讓所有 token 與 = result 都 inline，整體右對齊 */
+}
+
+/* Individual tokens in current expression */
+.cur-token {
+  display: inline;
+  border-radius: 5px;
+  padding: 0 1px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cur-token.op     { color: #aac4ff; }
+.cur-token.paren  { color: var(--text-dim); }
+.cur-token.result { color: var(--result); cursor: pointer; }
+.cur-token.result:hover { background: rgba(200,230,201,0.12); }
+.cur-token.result.error { color: var(--error); cursor: default; }
+.cur-token.result.pending {
+  color: var(--accent);
+  animation: pulse-text 0.9s ease infinite alternate;
+}
+.cur-token.linked  { color: var(--linked); font-style: italic; cursor: default; }
+/* = result 整組不拆行：若放不下就整組到下一行 */
+.cur-result-group {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.cur-token.eq-sep  { color: var(--text-dim); cursor: default; }
+.cur-token.spacer  { cursor: default; }
+
+.cur-token.active  { background: rgba(255,255,255,0.12); border-radius: 5px; }
+
+/* 游標閃爍線（接在 token 後） */
+.cur-token.cursor-active::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 32px;
+  background: var(--accent);
+  margin-left: 1px;
+  border-radius: 1px;
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulse-text { from{opacity:1} to{opacity:0.5} }
+
+/* ── Keypad ── */
+#keypad-area {
+  padding: 6px 10px 10px;
+  background: var(--surface);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+#keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 7px;
+}
+
+.key {
+  height: 54px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 22px;
+  font-weight: 400;
+  cursor: pointer;
+  background: var(--key-num);
+  color: var(--text);
+  transition: filter 0.1s, transform 0.08s;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+}
+
+.key:active { filter: brightness(1.4); transform: scale(0.94); }
+
+.key-op   { background: var(--key-op);   color: #aac4ff; font-size: 24px; }
+.key-func { background: var(--key-func); color: var(--text-dim); font-size: 20px; }
+.key-paren{ background: var(--key-func); color: var(--text-dim); font-size: 20px; }
+.key-back { background: var(--key-func); color: var(--text-dim); font-size: 22px; }
+.key-eq   { background: var(--key-eq);   color: #fff; font-size: 30px; font-weight: 500; }
+
+.key-eq-tall {
+  grid-row: span 2;
+  height: auto; /* override fixed height so it fills 2 rows */
+}
+
+.key-zero { font-size: 22px; }
+
+/* Selected history indicator on broom button */
+.key-func.hist-active { color: var(--accent); }

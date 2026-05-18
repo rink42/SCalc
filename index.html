@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#16213e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SCalc</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- 歷史記錄區（小字） -->
+    <div id="history-area">
+      <div id="history-container"></div>
+    </div>
+
+    <!-- 當前運算式（大字，右對齊） -->
+    <div id="current-area">
+      <div id="current-expr"></div>
+    </div>
+
+    <!-- 號碼盤 -->
+    <div id="keypad-area">
+      <div id="keypad">
+        <!-- 第一列：功能鍵 -->
+        <button class="key key-func" data-key="scroll">&#8964;</button>
+        <button class="key key-func" data-key="clear">&#x1F9F9;</button>
+        <button class="key key-back" data-key="⌫">&#x232B;</button>
+        <button class="key key-op"   data-key="÷">÷</button>
+
+        <!-- 第二列 -->
+        <button class="key key-paren" data-key="(">(</button>
+        <button class="key key-paren" data-key=")">)</button>
+        <button class="key key-func"  data-key="%">%</button>
+        <button class="key key-op"    data-key="×">×</button>
+
+        <!-- 第三列 -->
+        <button class="key key-num" data-key="7">7</button>
+        <button class="key key-num" data-key="8">8</button>
+        <button class="key key-num" data-key="9">9</button>
+        <button class="key key-op"  data-key="-">−</button>
+
+        <!-- 第四列 -->
+        <button class="key key-num" data-key="4">4</button>
+        <button class="key key-num" data-key="5">5</button>
+        <button class="key key-num" data-key="6">6</button>
+        <button class="key key-op"  data-key="+">+</button>
+
+        <!-- 第五列：1 2 3 + = (tall) -->
+        <button class="key key-num" data-key="1">1</button>
+        <button class="key key-num" data-key="2">2</button>
+        <button class="key key-num" data-key="3">3</button>
+        <button class="key key-eq key-eq-tall" data-key="=">=</button>
+
+        <!-- 第六列：0 00 . -->
+        <button class="key key-num key-zero" data-key="0">0</button>
+        <button class="key key-num" data-key="00">00</button>
+        <button class="key key-num" data-key=".">.</button>
+        <!-- = tall 佔此格，無按鈕 -->
+      </div>
+    </div>
+
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
