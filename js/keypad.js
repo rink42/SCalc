@@ -104,11 +104,23 @@ function appendKey(exprId, curIdx, key) {
 
   // Digit, dot, or '00'
   const cur = tokens[curIdx];
+  const { charIndex: ci } = getCursor();
   if (cur && cur.type === 'number' && !cur.linked && cur.value !== '(' && cur.value !== ')') {
     if ((key === '.' && cur.value.includes('.')) ||
         (key === '00' && cur.value === '0')) return curIdx;
+
+    if (ci !== null) {
+      // 字元游標模式：在 ci 之後插入
+      const ins = key === '00' ? '00' : key;
+      const newVal = cur.value.slice(0, ci + 1) + ins + cur.value.slice(ci + 1);
+      setToken(exprId, curIdx, newVal);
+      // 游標移到插入字元末尾
+      setCursor(exprId, curIdx, ci + ins.length);
+      return curIdx;
+    }
+
     setToken(exprId, curIdx, cur.value + key);
-    return curIdx; // stay on same token
+    return curIdx; // stay on same token (charIndex remains null = end)
   }
 
   // 沒有數字 token 在游標上 → 新建一個
@@ -124,26 +136,44 @@ function appendKey(exprId, curIdx, key) {
 function handleBackspace(expr, idx) {
   const tokens = expr.tokens;
   const cur = tokens[idx];
+  const { charIndex } = getCursor();
 
   if (!cur || cur.linked) {
+    // 游標在 token 外 or linked token → 刪前一個 token 的最後字
     if (idx > 0 && !tokens[idx - 1]?.linked) {
       const prev = tokens[idx - 1];
       if (prev.value.length > 1) {
         setToken(expr.id, idx - 1, prev.value.slice(0, -1));
-        setCursor(expr.id, idx - 1);
+        setCursor(expr.id, idx - 1, null);
       } else {
         removeToken(expr.id, idx - 1);
-        setCursor(expr.id, idx - 1);
+        setCursor(expr.id, idx - 1, null);
       }
     }
     return;
   }
 
-  if (cur.value.length > 1) {
-    setToken(expr.id, idx, cur.value.slice(0, -1));
+  if (charIndex !== null) {
+    // ── 字元游標模式：刪 charIndex 那個字 ──
+    const val = cur.value;
+    const newVal = val.slice(0, charIndex) + val.slice(charIndex + 1);
+    if (newVal === '') {
+      removeToken(expr.id, idx);
+      setCursor(expr.id, Math.max(0, idx - 1), null);
+    } else {
+      setToken(expr.id, idx, newVal);
+      // 游標留在同位置（現在指向原 charIndex 的下一字，或末尾）
+      const newCharIdx = charIndex >= newVal.length ? null : charIndex;
+      setCursor(expr.id, idx, newCharIdx);
+    }
   } else {
-    removeToken(expr.id, idx);
-    setCursor(expr.id, Math.max(0, idx - 1));
+    // ── 末尾模式：刪最後一個字 ──
+    if (cur.value.length > 1) {
+      setToken(expr.id, idx, cur.value.slice(0, -1));
+    } else {
+      removeToken(expr.id, idx);
+      setCursor(expr.id, Math.max(0, idx - 1), null);
+    }
   }
 }
 

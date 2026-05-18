@@ -9,9 +9,10 @@ const historyArea    = document.getElementById('history-area');
 // activeId: the expression shown in the large current area (always the latest,
 //           unless user tapped a history row to select it for deletion)
 let activeId   = null;
-let tokenIndex = null;    // cursor position within activeId's tokens
-let pendingOpId = null;   // id of expr whose result was clicked → waiting for op
-let selectedHistId = null; // history row selected (broom will clear this one)
+let tokenIndex = null;    // which token is active
+let charIndex  = null;    // which character within the active number token (null = end)
+let pendingOpId = null;
+let selectedHistId = null;
 
 // ── Callbacks for keypad ────────────────────────────────────────────────────
 const _onCursorChange = [];
@@ -20,17 +21,20 @@ const _onPendingOp    = [];
 export function onCursorUpdate(fn)   { _onCursorChange.push(fn); }
 export function onPendingOpSelect(fn){ _onPendingOp.push(fn); }
 
-export function getCursor()      { return { exprId: activeId, tokenIndex }; }
+export function getCursor()      { return { exprId: activeId, tokenIndex, charIndex }; }
 export function getPendingOpId() { return pendingOpId; }
 export function getSelectedHistId() { return selectedHistId; }
 
-export function setCursor(exprId, idx) {
+// setCursor(exprId, tokenIdx, charIdx?)
+// charIdx: position within number token; null = end of token (default)
+export function setCursor(exprId, idx, charIdx = null) {
   pendingOpId    = null;
   selectedHistId = null;
   activeId       = exprId;
   tokenIndex     = idx;
+  charIndex      = charIdx;
   render();
-  _onCursorChange.forEach(fn => fn({ exprId, tokenIndex: idx }));
+  _onCursorChange.forEach(fn => fn({ exprId, tokenIndex: idx, charIndex: charIdx }));
 }
 
 export function setPendingOp(exprId) {
@@ -133,7 +137,6 @@ function renderCurrent(expr) {
 
   // 渲染每個 token
   tokens.forEach((tok, i) => {
-    // 在 token 前加空格（第一個除外）
     if (i > 0) {
       const sp = document.createElement('span');
       sp.className = 'cur-token spacer';
@@ -141,18 +144,50 @@ function renderCurrent(expr) {
       currentExprEl.appendChild(sp);
     }
 
-    const span = document.createElement('span');
-    span.className = 'cur-token ' + tokenClass(tok);
-    if (tok.linked) span.classList.add('linked');
-    span.textContent = tok.value;
+    const isActiveToken = isCursor && tokenIndex === i;
+    const isNumber = tok.type === 'number' && !tok.linked
+                     && tok.value !== '(' && tok.value !== ')';
 
-    const isActive = isCursor && tokenIndex === i;
-    if (isActive) span.classList.add('active', 'cursor-active');
+    if (isNumber) {
+      // ── 所有數字 token 都拆成字元 span → 可直接點某個字定位游標 ──
+      const wrapper = document.createElement('span');
+      wrapper.className = 'cur-token num';
+      if (isActiveToken) wrapper.classList.add('active');
 
-    if (!tok.linked) {
-      span.addEventListener('click', () => setCursor(expr.id, i));
+      const chars = tok.value.split('');
+      chars.forEach((ch, ci) => {
+        const cSpan = document.createElement('span');
+        cSpan.className = 'cur-char';
+
+        if (isActiveToken) {
+          // 游標線：charIndex===null 表示末尾（最後一字之後）
+          const showCursor = charIndex === null
+            ? ci === chars.length - 1
+            : ci === charIndex;
+          if (showCursor) cSpan.classList.add('cursor-here');
+        }
+
+        cSpan.textContent = ch;
+        cSpan.addEventListener('click', e => {
+          e.stopPropagation();
+          setCursor(expr.id, i, ci); // 直接定位到這個字
+        });
+        wrapper.appendChild(cSpan);
+      });
+
+      currentExprEl.appendChild(wrapper);
+    } else {
+      // ── operator / paren / linked token：整體顯示 ──
+      const span = document.createElement('span');
+      span.className = 'cur-token ' + tokenClass(tok);
+      if (tok.linked) span.classList.add('linked');
+      if (isActiveToken) span.classList.add('active');
+      span.textContent = tok.value;
+      if (!tok.linked) {
+        span.addEventListener('click', () => setCursor(expr.id, i, null));
+      }
+      currentExprEl.appendChild(span);
     }
-    currentExprEl.appendChild(span);
   });
 
   // 游標在末尾（past last token）

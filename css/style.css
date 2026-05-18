@@ -129,8 +129,31 @@ html, body {
 
 .cur-token.active  { background: rgba(255,255,255,0.12); border-radius: 5px; }
 
-/* 游標閃爍線（接在 token 後） */
+/* 游標閃爍線（token 末尾） */
 .cur-token.cursor-active::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 32px;
+  background: var(--accent);
+  margin-left: 1px;
+  border-radius: 1px;
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+/* 單一字元（active 數字 token 拆開後） */
+.cur-char {
+  display: inline;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 1px;
+  transition: background 0.1s;
+}
+.cur-char:hover { background: rgba(255,255,255,0.1); }
+
+/* 游標顯示在這個字之後 */
+.cur-char.cursor-here::after {
   content: '';
   display: inline-block;
   width: 2px;
