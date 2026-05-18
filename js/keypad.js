@@ -108,13 +108,14 @@ function appendKey(exprId, curIdx, key) {
   // ── 括號 ──────────────────────────────────────────────────────────────────
   if (key === '(' || key === ')') {
     if (key === '(' && betweenOps) {
-      // 在兩個 op 之間插入 (，游標跟在 ( 後（op2 繼續存在，成為括號內的 unary）
       insertToken(exprId, curIdx, { type: 'number', value: '(' });
       return curIdx + 1;
     }
     const at = curIdx < tokens.length ? curIdx + 1 : tokens.length;
     insertToken(exprId, at, { type: 'number', value: key });
-    return at + 1;
+    // 游標停在剛插入的括號上，不往後跳
+    // 這樣連按 (( 會緊接在一起，不會跳過中間的 token
+    return at;
   }
 
   // ── 數字 / 小數點 / 00 ────────────────────────────────────────────────────
@@ -147,7 +148,9 @@ function appendKey(exprId, curIdx, key) {
     ? curIdx           // 插在 op 前（緊接在 ( 後）
     : cur?.type === 'operator'
       ? curIdx + 1     // 插在 op 後（原行為）
-      : Math.min(curIdx, tokens.length);
+      : cur?.value === '('
+        ? curIdx + 1   // 游標在 ( 上 → 插在 ( 後面
+        : Math.min(curIdx, tokens.length);
   insertToken(exprId, insertAt, { type: 'number', value: key === '00' ? '0' : key });
   return insertAt;
 }
