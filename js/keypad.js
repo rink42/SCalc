@@ -28,8 +28,14 @@ function handleKey(key) {
     return;
   }
 
-  // ── Scroll to bottom ────────────────────────────────────────────────────
-  if (key === 'scroll') { scrollToBottom(); return; }
+  // ── Collapse / expand keypad ─────────────────────────────────────────────
+  if (key === 'collapse') {
+    const area = document.getElementById('keypad-area');
+    const btn  = document.querySelector('[data-key="collapse"]');
+    const collapsed = area.classList.toggle('collapsed');
+    btn.innerHTML = collapsed ? '&#8963;' : '&#8964;';
+    return;
+  }
 
   // ── Pending-op mode ──────────────────────────────────────────────────────
   const pendingId = getPendingOpId();

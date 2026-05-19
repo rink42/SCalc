@@ -183,5 +183,22 @@ html, body {
 
 .key-zero { font-size: 22px; }
 
+/* 收合按鈕：置中、較大 */
+.key-collapse {
+  background: var(--key-func);
+  color: var(--text-dim);
+  font-size: 32px;
+}
+
+/* 收合動畫 */
+#keypad {
+  overflow: hidden;
+  max-height: 400px;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#keypad-area.collapsed #keypad {
+  max-height: 54px;   /* 只保留第一列 */
+}
+
 /* Selected history indicator on broom button */
 .key-func.hist-active { color: var(--accent); }
