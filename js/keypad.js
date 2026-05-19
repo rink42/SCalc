@@ -52,7 +52,15 @@ function handleKey(key) {
       return;
     }
     clearPendingOp();
-    // fall through to normal input on the same expression
+    // 數字 / 括號 / 小數點 → 新開一個運算式
+    if (key !== '⌫' && key !== '=') {
+      const newExpr = createExpression();
+      const idx = appendKey(newExpr.id, 0, key);
+      setCursor(newExpr.id, idx);
+      scrollToBottom();
+      return;
+    }
+    // ⌫ / = fall through（在原運算式上操作）
   }
 
   const { exprId, tokenIndex } = getCursor();
