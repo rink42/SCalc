@@ -84,8 +84,14 @@ function handleKey(key) {
   if (key === '%')  { handlePercent(expr, tokenIndex); return; }
 
   const newIdx = appendKey(exprId, tokenIndex, key);
-  setCursor(exprId, newIdx);
+  // appendKey 可能已在字元游標模式下自行設定好 charIndex，
+  // 若這裡再無條件 setCursor(charIdx=null) 會把它蓋掉 → 游標亂跳。
+  // 用回傳的 sentinel 判斷是否需要外層再設。
+  if (newIdx !== SKIP_CURSOR) setCursor(exprId, newIdx);
 }
+
+// appendKey 若已自行呼叫 setCursor，回傳此值告訴 handleKey 不要覆蓋
+const SKIP_CURSOR = Symbol('skip-cursor');
 
 // Insert a key at the current cursor position; return next cursor index.
 function appendKey(exprId, curIdx, key) {
@@ -135,7 +141,8 @@ function appendKey(exprId, curIdx, key) {
   // ── 數字 / 小數點 / 00 ────────────────────────────────────────────────────
   if (betweenOps) {
     // 在兩 op 之間插入數字（插在 op2 前面）
-    insertToken(exprId, curIdx, { type: 'number', value: key === '00' ? '0' : key });
+    const numVal = key === '00' ? '0' : key;
+    insertToken(exprId, curIdx, { type: 'number', value: numVal });
     return curIdx; // 游標在新數字上
   }
 
@@ -144,14 +151,19 @@ function appendKey(exprId, curIdx, key) {
         (key === '00' && cur.value === '0')) return curIdx;
 
     if (ci !== null) {
-      // 字元游標模式：在 ci 之後插入
+      // 字元游標模式
       const ins = key === '00' ? '00' : key;
-      const newVal = cur.value.slice(0, ci + 1) + ins + cur.value.slice(ci + 1);
+
+      // 字元游標在第 ci 字之前 → 插在該處，游標停在新插入字之後
+      const newVal = cur.value.slice(0, ci) + ins + cur.value.slice(ci);
       setToken(exprId, curIdx, newVal);
       setCursor(exprId, curIdx, ci + ins.length);
-      return curIdx;
+      return SKIP_CURSOR;
     }
-    setToken(exprId, curIdx, cur.value + key);
+    // 末尾模式：直接附加
+    const newVal = cur.value + key;
+    setToken(exprId, curIdx, newVal);
+    setCursor(exprId, curIdx, null);
     return curIdx;
   }
 
@@ -165,7 +177,8 @@ function appendKey(exprId, curIdx, key) {
       : cur?.value === '('
         ? curIdx + 1   // 游標在 ( 上 → 插在 ( 後面
         : Math.min(curIdx, tokens.length);
-  insertToken(exprId, insertAt, { type: 'number', value: key === '00' ? '0' : key });
+  const numVal = key === '00' ? '0' : key;
+  insertToken(exprId, insertAt, { type: 'number', value: numVal });
   return insertAt;
 }
 
@@ -190,16 +203,18 @@ function handleBackspace(expr, idx) {
   }
 
   if (charIndex !== null) {
-    // ── 字元游標模式：刪 charIndex 那個字 ──
+    // ── 字元游標模式：游標在第 charIndex 字之前 → 刪它「前面」那個字 ──
+    if (charIndex === 0) return;  // 已在最前，無字可刪
     const val = cur.value;
-    const newVal = val.slice(0, charIndex) + val.slice(charIndex + 1);
+    const del = charIndex - 1;
+    const newVal = val.slice(0, del) + val.slice(del + 1);
     if (newVal === '') {
       removeToken(expr.id, idx);
       setCursor(expr.id, Math.max(0, idx - 1), null);
     } else {
       setToken(expr.id, idx, newVal);
-      // 游標留在同位置（現在指向原 charIndex 的下一字，或末尾）
-      const newCharIdx = charIndex >= newVal.length ? null : charIndex;
+      // 游標仍停在原本那個字之前（索引 -1）；若變末尾則 null
+      const newCharIdx = del >= newVal.length ? null : del;
       setCursor(expr.id, idx, newCharIdx);
     }
   } else {

@@ -105,6 +105,14 @@ export function formatResult(value) {
   // Avoid floating-point noise: round to 10 significant digits
   const rounded = parseFloat(value.toPrecision(10));
   // Show integers without decimal
-  if (Number.isInteger(rounded)) return String(rounded);
-  return String(rounded);
+  let str;
+  if (Number.isInteger(rounded)) {
+    str = String(rounded);
+  } else {
+    str = String(rounded);
+  }
+  // 加上千分位
+  const [intPart, decPart] = str.split('.');
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
 }

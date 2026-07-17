@@ -121,8 +121,21 @@ html, body {
 }
 .cur-char:hover { background: rgba(255,255,255,0.1); }
 
-/* 游標顯示在這個字之後 */
-.cur-char.cursor-here::after {
+/* 游標顯示在這個字之前 */
+.cur-char.cursor-here::before {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 32px;
+  background: var(--accent);
+  margin-right: 1px;
+  border-radius: 1px;
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+/* 游標顯示在這個字之後（末尾，數字與運算子邊界） */
+.cur-char.cursor-after::after {
   content: '';
   display: inline-block;
   width: 2px;

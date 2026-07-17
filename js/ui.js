@@ -101,23 +101,56 @@ function buildRow(expr) {
 
     if (isNumber) {
       // 數字 token：拆成字元 span，任意位置皆可點擊定位游標
+      // 同時在顯示時加上千分位逗號
       const wrapper = document.createElement('span');
       wrapper.className = 'cur-token num';
       if (isActiveToken) wrapper.classList.add('active');
 
-      tok.value.split('').forEach((ch, ci) => {
+      const chars = tok.value.split('');
+      chars.forEach((ch, ci) => {
+        // 在每 3 位後插入逗號（從右往左數）
+        // 例：1234 → 1,234；12345 → 12,345
+        const intLen = tok.value.indexOf('.') !== -1
+          ? tok.value.indexOf('.')
+          : tok.value.length;
+        const isBeforeDecimal = ci < intLen;
+
+        if (isBeforeDecimal && ci > 0 && (intLen - ci) % 3 === 0) {
+          const comma = document.createElement('span');
+          comma.className = 'cur-comma';
+          comma.textContent = ',';
+          // 點擊逗號會定位游標在逗號前面的字符（用於在那裡插入）
+          comma.addEventListener('click', e => {
+            e.stopPropagation();
+            setCursor(expr.id, i, ci - 1);
+          });
+          wrapper.appendChild(comma);
+        }
+
         const cSpan = document.createElement('span');
         cSpan.className = 'cur-char';
+        const isLastChar = ci === tok.value.length - 1;
         if (isActiveToken) {
-          const showCursor = charIndex === null
-            ? ci === tok.value.length - 1
-            : ci === charIndex;
-          if (showCursor) cSpan.classList.add('cursor-here');
+          if (charIndex === null) {
+            // 末尾模式：游標畫在最後一字「之後」（4|+）
+            if (isLastChar) cSpan.classList.add('cursor-after');
+          } else if (ci === charIndex) {
+            cSpan.classList.add('cursor-here');
+          }
         }
         cSpan.textContent = ch;
         cSpan.addEventListener('click', e => {
           e.stopPropagation();
-          setCursor(expr.id, i, ci);
+          // 用點擊位置判斷左半 / 右半：左半→游標在此字前，右半→在此字後
+          const rect = cSpan.getBoundingClientRect();
+          const rightHalf = (e.clientX - rect.left) > rect.width / 2;
+          if (!rightHalf) {
+            setCursor(expr.id, i, ci);            // 此字之前
+          } else if (isLastChar) {
+            setCursor(expr.id, i, null);          // 末尾，數字與運算子邊界
+          } else {
+            setCursor(expr.id, i, ci + 1);        // 下一字之前
+          }
         });
         wrapper.appendChild(cSpan);
       });
