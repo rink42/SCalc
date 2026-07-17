@@ -1,4 +1,4 @@
-const CACHE_VER = 'scalc-v13';
+const CACHE_VER = 'scalc-v14';
 
 // 動態取得 base path（支援 GitHub Pages 子目錄部署）
 const BASE = self.registration.scope;
@@ -18,7 +18,10 @@ const STATIC = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_VER).then(c => c.addAll(STATIC))
+    caches.open(CACHE_VER).then(c =>
+      // 逐一快取，單一檔 404 不會讓整個 install 失敗（addAll 會全部 reject）
+      Promise.all(STATIC.map(url => c.add(url).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });
@@ -33,7 +36,25 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+
+  // HTML 導航：network-first，畫面永遠拿最新版；離線才退快取
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_VER).then(c => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then(c => c || caches.match(BASE)))
+    );
+    return;
+  }
+
+  // 靜態資源：cache-first
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(req).then(cached => cached || fetch(req))
   );
 });
