@@ -237,14 +237,11 @@ function handleEquals(expr) {
 }
 
 function handlePercent(expr, idx) {
-  // If current token is a number, append /100 as operator tokens
   const tokens = expr.tokens;
   const cur = tokens[idx];
   if (cur && cur.type === 'number' && !cur.linked) {
-    const at = idx + 1;
-    insertToken(expr.id, at,     { type: 'operator', value: '÷' });
-    insertToken(expr.id, at + 1, { type: 'number',   value: '100' });
-    setCursor(expr.id, at + 2);
+    insertToken(expr.id, idx + 1, { type: 'operator', value: '%' });
+    setCursor(expr.id, idx + 2);
   }
 }
 

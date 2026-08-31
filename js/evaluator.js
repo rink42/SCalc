@@ -28,6 +28,7 @@ function tokensToString(tokens) {
     if (t.type === 'operator') {
       if (t.value === '×') return '*';
       if (t.value === '÷') return '/';
+      if (t.value === '%') return '/100';
     }
     return t.value;
   }).join('');

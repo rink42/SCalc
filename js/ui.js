@@ -88,7 +88,8 @@ function buildRow(expr) {
   }
 
   tokens.forEach((tok, i) => {
-    if (i > 0) {
+    // % 緊貼前一個數字，不加空格
+    if (i > 0 && tok.value !== '%') {
       const sp = document.createElement('span');
       sp.className = 'cur-token spacer';
       sp.textContent = ' ';
