@@ -117,6 +117,18 @@ function appendKey(exprId, curIdx, key) {
       setToken(exprId, curIdx, key);
       return curIdx + 1;
     }
+    // 若游標在數字 token 內部（charIndex 模式），先把數字切開再插運算子
+    if (ci !== null && cur?.type === 'number' && !cur.linked
+        && cur.value !== '(' && cur.value !== ')') {
+      const left  = cur.value.slice(0, ci);
+      const right = cur.value.slice(ci);
+      // 用右半替換原 token，插入運算子和左半
+      setToken(exprId, curIdx, right || '0');
+      if (left) insertToken(exprId, curIdx, { type: 'number', value: left });
+      const opAt = left ? curIdx + 1 : curIdx;
+      insertToken(exprId, opAt, { type: 'operator', value: key });
+      return opAt + 1;  // 游標在運算子之後（right 數字上）
+    }
     // 一般情況：插在游標之後
     const at = curIdx < tokens.length ? curIdx + 1 : tokens.length;
     insertToken(exprId, at, { type: 'operator', value: key });
