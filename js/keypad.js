@@ -14,7 +14,7 @@ export function initKeypad() {
   });
 }
 
-function handleKey(key) {
+export function handleKey(key) {
   // ── Broom (clear) ────────────────────────────────────────────────────────
   if (key === 'clear') {
     const { exprId } = getCursor();
