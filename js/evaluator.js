@@ -30,7 +30,7 @@ function tokensToString(tokens) {
       if (t.value === '÷') return '/';
       if (t.value === '%') return '/100';
     }
-    return t.value;
+    return t.value.replace(/,/g, '');
   }).join('');
 }
 
